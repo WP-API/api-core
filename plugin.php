@@ -144,7 +144,7 @@ add_action( 'init', 'rest_api_init' );
  */
 function rest_api_register_rewrites() {
 	add_rewrite_rule( '^' . rest_get_url_prefix() . '/?$','index.php?rest_route=/','top' );
-	add_rewrite_rule( '^' . rest_get_url_prefix() . '(.*)?','index.php?rest_route=$matches[1]','top' );
+	add_rewrite_rule( '^' . rest_get_url_prefix() . '/(.*)?','index.php?rest_route=/$matches[1]','top' );
 }
 
 /**
@@ -220,7 +220,14 @@ function rest_api_loaded() {
 	/** @var WP_REST_Server $wp_rest_server */
 	global $wp_rest_server;
 
-	// Allow for a plugin to insert a different class to handle requests.
+	/**
+	 * Filter the REST Server Class.
+	 *
+	 * This filter allows you to adjust the server class used by the API, using a
+	 * different class to handle requests.
+	 *
+	 * @param string $class_name The name of the server class. Default 'WP_REST_Server'.
+	 */
 	$wp_rest_server_class = apply_filters( 'wp_rest_server_class', 'WP_REST_Server' );
 	$wp_rest_server = new $wp_rest_server_class;
 
@@ -296,9 +303,7 @@ register_deactivation_hook( __FILE__, 'rest_api_deactivation' );
  */
 function rest_get_url_prefix() {
 	/**
-	 * Filter the rest URL prefix.
-	 *
-	 * @since 1.0
+	 * Filter the REST URL prefix.
 	 *
 	 * @param string $prefix URL prefix. Default 'wp-json'.
 	 */
@@ -334,7 +339,7 @@ function get_rest_url( $blog_id = null, $path = '/', $scheme = 'json' ) {
 	/**
 	 * Filter the REST URL.
 	 *
-	 * @since 1.0
+	 * Use this filter to adjust the url returned by the `get_rest_url` function.
 	 *
 	 * @param string $url     REST URL.
 	 * @param string $path    REST route.

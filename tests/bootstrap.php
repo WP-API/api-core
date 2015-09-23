@@ -42,7 +42,4 @@ define( 'REST_TESTS_IMPOSSIBLY_HIGH_NUMBER', 99999999 );
 
 // Helper classes
 require_once dirname( __FILE__ ) . '/class-wp-test-rest-testcase.php';
-require_once dirname( __FILE__ ) . '/class-wp-test-rest-controller-testcase.php';
-require_once dirname( __FILE__ ) . '/class-wp-test-rest-post-type-controller-testcase.php';
 require_once dirname( __FILE__ ) . '/class-wp-test-spy-rest-server.php';
-require_once dirname( __FILE__ ) . '/class-wp-rest-test-controller.php';

@@ -19,7 +19,7 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	 * The plugin should be installed and activated.
 	 */
 	function test_plugin_activated() {
-		$this->assertTrue( class_exists( 'WP_REST_Posts_Controller' ) );
+		$this->assertTrue( class_exists( 'WP_REST_Server' ) );
 	}
 
 	/**
@@ -236,6 +236,7 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	}
 
 	public function test_add_extra_api_taxonomy_arguments() {
+		$this->markTestSkipped();
 
 		// bootstrap the taxonomy variables
 		_add_extra_api_taxonomy_arguments();

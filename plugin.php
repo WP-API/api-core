@@ -19,7 +19,6 @@ define( 'REST_API_VERSION', '2.0-beta4' );
 /**
  * Include our files for the API.
  */
-include_once( dirname( __FILE__ ) . '/compatibility-v1.php' );
 include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-jsonserializable.php' );
 
 include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-rest-server.php' );
@@ -28,20 +27,6 @@ include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-http-responsei
 include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-http-response.php' );
 include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-rest-response.php' );
 require_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-rest-request.php' );
-
-require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-controller.php';
-require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-posts-controller.php';
-require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-attachments-controller.php';
-require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-post-types-controller.php';
-require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-post-statuses-controller.php';
-require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-revisions-controller.php';
-require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-taxonomies-controller.php';
-require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-terms-controller.php';
-require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-users-controller.php';
-require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-comments-controller.php';
-include_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-meta-controller.php';
-include_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-meta-posts-controller.php';
-include_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-posts-terms-controller.php';
 
 include_once( dirname( __FILE__ ) . '/extras.php' );
 
@@ -140,137 +125,6 @@ function register_api_field( $object_type, $attribute, $args = array() ) {
 		$wp_rest_additional_fields[ $object_type ][ $attribute ] = $args;
 	}
 }
-
-/**
- * Add the extra Post Type registration arguments we need
- * These attributes will eventually be committed to core.
- */
-function _add_extra_api_post_type_arguments() {
-	global $wp_post_types;
-
-	$wp_post_types['post']->show_in_rest = true;
-	$wp_post_types['post']->rest_base = 'posts';
-	$wp_post_types['post']->rest_controller_class = 'WP_REST_Posts_Controller';
-
-	$wp_post_types['page']->show_in_rest = true;
-	$wp_post_types['page']->rest_base = 'pages';
-	$wp_post_types['page']->rest_controller_class = 'WP_REST_Posts_Controller';
-
-	$wp_post_types['attachment']->show_in_rest = true;
-	$wp_post_types['attachment']->rest_base = 'media';
-	$wp_post_types['attachment']->rest_controller_class = 'WP_REST_Attachments_Controller';
-
-}
-add_action( 'init', '_add_extra_api_post_type_arguments', 11 );
-
-/**
- * Add the extra Taxonomy registration arguments we need.
- * These attributes will eventually be committed to core.
- */
-function _add_extra_api_taxonomy_arguments() {
-	global $wp_taxonomies;
-
-	if ( isset( $wp_taxonomies['category'] ) ) {
-		$wp_taxonomies['category']->show_in_rest = true;
-		$wp_taxonomies['category']->rest_base = 'category';
-		$wp_taxonomies['category']->rest_controller_class = 'WP_REST_Terms_Controller';
-	}
-
-	if ( isset( $wp_taxonomies['post_tag'] ) ) {
-		$wp_taxonomies['post_tag']->show_in_rest = true;
-		$wp_taxonomies['post_tag']->rest_base = 'tag';
-		$wp_taxonomies['post_tag']->rest_controller_class = 'WP_REST_Terms_Controller';
-	}
-}
-add_action( 'init', '_add_extra_api_taxonomy_arguments', 11 );
-
-/**
- * Register default REST API routes
- */
-function create_initial_rest_routes() {
-
-	foreach ( get_post_types( array( 'show_in_rest' => true ), 'objects' ) as $post_type ) {
-		$class = ! empty( $post_type->rest_controller_class ) ? $post_type->rest_controller_class : 'WP_REST_Posts_Controller';
-
-		if ( ! class_exists( $class ) ) {
-			continue;
-		}
-		$controller = new $class( $post_type->name );
-		if ( ! is_subclass_of( $controller, 'WP_REST_Controller' ) ) {
-			continue;
-		}
-
-		$controller->register_routes();
-
-		if ( post_type_supports( $post_type->name, 'custom-fields' ) ) {
-			$meta_controller = new WP_REST_Meta_Posts_Controller( $post_type->name );
-			$meta_controller->register_routes();
-		}
-		if ( post_type_supports( $post_type->name, 'revisions' ) ) {
-			$revisions_controller = new WP_REST_Revisions_Controller( $post_type->name );
-			$revisions_controller->register_routes();
-		}
-
-		foreach ( get_object_taxonomies( $post_type->name, 'objects' ) as $taxonomy ) {
-
-			if ( empty( $taxonomy->show_in_rest ) ) {
-				continue;
-			}
-
-			$posts_terms_controller = new WP_REST_Posts_Terms_Controller( $post_type->name, $taxonomy->name );
-			$posts_terms_controller->register_routes();
-		}
-	}
-
-	/*
-	 * Post types
-	 */
-	$controller = new WP_REST_Post_Types_Controller;
-	$controller->register_routes();
-
-	/*
-	 * Post statuses
-	 */
-	$controller = new WP_REST_Post_Statuses_Controller;
-	$controller->register_routes();
-
-	/*
-	 * Taxonomies
-	 */
-	$controller = new WP_REST_Taxonomies_Controller;
-	$controller->register_routes();
-
-	/*
-	 * Terms
-	 */
-	foreach ( get_taxonomies( array( 'show_in_rest' => true ), 'object' ) as $taxonomy ) {
-		$class = ! empty( $taxonomy->rest_controller_class ) ? $taxonomy->rest_controller_class : 'WP_REST_Terms_Controller';
-
-		if ( ! class_exists( $class ) ) {
-			continue;
-		}
-		$controller = new $class( $taxonomy->name );
-		if ( ! is_subclass_of( $controller, 'WP_REST_Controller' ) ) {
-			continue;
-		}
-
-		$controller->register_routes();
-	}
-
-	/*
-	 * Users
-	 */
-	$controller = new WP_REST_Users_Controller;
-	$controller->register_routes();
-
-	/**
-	 * Comments
-	 */
-	$controller = new WP_REST_Comments_Controller;
-	$controller->register_routes();
-
-}
-add_action( 'rest_api_init', 'create_initial_rest_routes', 0 );
 
 /**
  * Register rewrite rules for the API.

@@ -235,23 +235,6 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 		$this->assertNull( $response );
 	}
 
-	public function test_add_extra_api_taxonomy_arguments() {
-		$this->markTestSkipped();
-
-		// bootstrap the taxonomy variables
-		_add_extra_api_taxonomy_arguments();
-
-		$taxonomy = get_taxonomy( 'category' );
-		$this->assertTrue( $taxonomy->show_in_rest );
-		$this->assertEquals( 'category', $taxonomy->rest_base );
-		$this->assertEquals( 'WP_REST_Terms_Controller', $taxonomy->rest_controller_class );
-
-		$taxonomy = get_taxonomy( 'post_tag' );
-		$this->assertTrue( $taxonomy->show_in_rest );
-		$this->assertEquals( 'tag', $taxonomy->rest_base );
-		$this->assertEquals( 'WP_REST_Terms_Controller', $taxonomy->rest_controller_class );
-	}
-
 	/**
 	 * The get_rest_url function should return a URL consistently terminated with a "/",
 	 * whether the blog is configured with pretty permalink support or not.

@@ -74,7 +74,7 @@ class WP_REST_Server {
 	const CREATABLE = 'POST';
 
 	/**
-	 * Alias for GET, PUT, PATCH transport methods together.
+	 * Alias for POST, PUT, PATCH transport methods together.
 	 *
 	 * @since 4.4.0
 	 * @var string
@@ -168,7 +168,7 @@ class WP_REST_Server {
 	/**
 	 * Instantiates the REST server.
 	 *
-	 * @sincd 4.4.0
+	 * @since 4.4.0
 	 * @access public
 	 */
 	public function __construct() {

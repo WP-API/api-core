@@ -9,8 +9,6 @@
  * @TODO fix this doc block (Make it better maybe?)
  */
 
-add_action( 'wp_enqueue_scripts', 'rest_register_scripts', -100 );
-add_action( 'admin_enqueue_scripts', 'rest_register_scripts', -100 );
 add_action( 'xmlrpc_rsd_apis', 'rest_output_rsd' );
 add_action( 'wp_head', 'rest_output_link_wp_head', 10, 0 );
 add_action( 'template_redirect', 'rest_output_link_header', 11, 0 );
@@ -20,22 +18,6 @@ add_action( 'auth_cookie_bad_username', 'rest_cookie_collect_status' );
 add_action( 'auth_cookie_bad_hash',     'rest_cookie_collect_status' );
 add_action( 'auth_cookie_valid',        'rest_cookie_collect_status' );
 add_filter( 'rest_authentication_errors', 'rest_cookie_check_errors', 100 );
-
-
-
-/**
- * Registers REST API JavaScript helpers.
- *
- * @since 4.4.0
- *
- * @see wp_register_scripts()
- */
-function rest_register_scripts() {
-	wp_register_script( 'wp-api', plugins_url( 'wp-api.js', __FILE__ ), array( 'jquery', 'backbone', 'underscore' ), '1.1', true );
-
-	$settings = array( 'root' => esc_url_raw( get_rest_url() ), 'nonce' => wp_create_nonce( 'wp_rest' ) );
-	wp_localize_script( 'wp-api', 'WP_API_Settings', $settings );
-}
 
 /**
  * Adds the REST API URL to the WP RSD endpoint.
@@ -311,36 +293,4 @@ function rest_get_timezone() {
 	$zone = new DateTimeZone( $tzstring );
 
 	return $zone;
-}
-
-/**
- * Retrieves the avatar url for a user who provided a user ID or email address.
- *
- * get_avatar() doesn't return just the URL, so we have to extract it here.
- *
- * @since 4.4.0
- * @deprecated WPAPI-2.0 rest_get_avatar_urls()
- * @see rest_get_avatar_urls()
- *
- * @param string $email Email address.
- * @return string URL for the user's avatar, empty string otherwise.
- */
-function rest_get_avatar_url( $email ) {
-	_deprecated_function( 'rest_get_avatar_url', 'WPAPI-2.0', 'rest_get_avatar_urls' );
-
-	// Use the WP Core `get_avatar_url()` function introduced in 4.2.
-	if ( function_exists( 'get_avatar_url' ) ) {
-		return esc_url_raw( get_avatar_url( $email ) );
-	}
-
-	$avatar_html = get_avatar( $email );
-
-	// Strip the avatar url from the get_avatar img tag.
-	preg_match( '/src=["|\'](.+)[\&|"|\']/U', $avatar_html, $matches );
-
-	if ( isset( $matches[1] ) && ! empty( $matches[1] ) ) {
-		return esc_url_raw( $matches[1] );
-	}
-
-	return '';
 }

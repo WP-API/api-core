@@ -11,7 +11,7 @@
 
 if ( ! interface_exists( 'JsonSerializable' ) ) {
 	define( 'WP_JSON_SERIALIZE_COMPATIBLE', true );
-	// @codingStandardsIgnoreStart
+
 	/**
 	 * JsonSerializable interface.
 	 *
@@ -20,5 +20,4 @@ if ( ! interface_exists( 'JsonSerializable' ) ) {
 	interface JsonSerializable {
 		public function jsonSerialize();
 	}
-	// @codingStandardsIgnoreEnd
 }

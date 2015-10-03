@@ -77,7 +77,7 @@ include_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-meta-posts-cont
 include_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-posts-terms-controller.php';
 
 /** REST extras */
-include_once( dirname( __FILE__ ) . '/extras.php' );
+include_once( dirname( __FILE__ ) . '/lib/rest-functions.php' );
 
 /**
  * Registers a REST API route.

@@ -28,9 +28,6 @@ include_once( dirname( __FILE__ ) . '/lib/functions.php' );
 /** WP_REST_Server class */
 include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-rest-server.php' );
 
-/** WP_HTTP_ResponseInterface interface */
-include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-http-responseinterface.php' );
-
 /** WP_HTTP_Response class */
 include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-http-response.php' );
 

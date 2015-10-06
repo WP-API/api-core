@@ -6,32 +6,502 @@
  * @subpackage REST_API
  */
 
-add_action( 'wp_enqueue_scripts', 'rest_register_scripts', -100 );
-add_action( 'admin_enqueue_scripts', 'rest_register_scripts', -100 );
-add_action( 'xmlrpc_rsd_apis', 'rest_output_rsd' );
-add_action( 'wp_head', 'rest_output_link_wp_head', 10, 0 );
-add_action( 'template_redirect', 'rest_output_link_header', 11, 0 );
-add_action( 'auth_cookie_malformed',    'rest_cookie_collect_status' );
-add_action( 'auth_cookie_expired',      'rest_cookie_collect_status' );
-add_action( 'auth_cookie_bad_username', 'rest_cookie_collect_status' );
-add_action( 'auth_cookie_bad_hash',     'rest_cookie_collect_status' );
-add_action( 'auth_cookie_valid',        'rest_cookie_collect_status' );
-add_filter( 'rest_authentication_errors', 'rest_cookie_check_errors', 100 );
-
-
-
 /**
- * Registers REST API JavaScript helpers.
+ * Registers a REST API route.
  *
  * @since 4.4.0
  *
- * @see wp_register_scripts()
+ * @param string $namespace The first URL segment after core prefix. Should be unique to your package/plugin.
+ * @param string $route     The base URL for route you are adding.
+ * @param array  $args      Optional. Either an array of options for the endpoint, or an array of arrays for
+ *                          multiple methods. Default empty array.
+ * @param bool   $override  Optional. If the route already exists, should we override it? True overrides,
+ *                          false merges (with newer overriding if duplicate keys exist). Default false.
  */
-function rest_register_scripts() {
-	wp_register_script( 'wp-api', plugins_url( 'wp-api.js', __FILE__ ), array( 'jquery', 'backbone', 'underscore' ), '1.1', true );
+function register_rest_route( $namespace, $route, $args = array(), $override = false ) {
 
-	$settings = array( 'root' => esc_url_raw( get_rest_url() ), 'nonce' => wp_create_nonce( 'wp_rest' ) );
-	wp_localize_script( 'wp-api', 'WP_API_Settings', $settings );
+	/** @var WP_REST_Server $wp_rest_server */
+	global $wp_rest_server;
+
+	if ( isset( $args['callback'] ) ) {
+		// Upgrade a single set to multiple
+		$args = array( $args );
+	}
+
+	$defaults = array(
+		'methods'         => 'GET',
+		'callback'        => null,
+		'args'            => array(),
+	);
+	foreach ( $args as $key => &$arg_group ) {
+		if ( ! is_numeric( $arg_group ) ) {
+			// Route option, skip here
+			continue;
+		}
+
+		$arg_group = array_merge( $defaults, $arg_group );
+	}
+
+	if ( $namespace ) {
+		$full_route = '/' . trim( $namespace, '/' ) . '/' . trim( $route, '/' );
+	} else {
+		/*
+		 * Non-namespaced routes are not allowed, with the exception of the main
+		 * and namespace indexes. If you really need to register a
+		 * non-namespaced route, call `WP_REST_Server::register_route` directly.
+		 */
+		_doing_it_wrong( 'register_rest_route', 'Routes must be namespaced with plugin name and version', 'WPAPI-2.0' );
+
+		$full_route = '/' . trim( $route, '/' );
+	}
+
+	$wp_rest_server->register_route( $namespace, $full_route, $args, $override );
+}
+
+/**
+ * Registers a new field on an existing WordPress object type.
+ *
+ * @since 4.4.0
+ *
+ * @global array $wp_rest_additional_fields Holds registered fields, organized
+ *                                          by object type.
+ *
+ * @param string|array $object_type Object(s) the field is being registered
+ *                                   to, "post"|"term"|"comment" etc.
+ * @param string $attribute         The attribute name.
+ * @param array  $args {
+ *     Optional. An array of arguments used to handle the registered field.
+ *
+ *     @type string|array|null $get_callback    Optional. The callback function used to retrieve the field
+ *                                              value. Default is 'null', the field will not be returned in
+ *                                              the response.
+ *     @type string|array|null $update_callback Optional. The callback function used to set and update the
+ *                                              field value. Default is 'null', the value cannot be set or
+ *                                              updated.
+ *     @type string|array|null schema           Optional. The callback function used to create the schema for
+ *                                              this field. Default is 'null', no schema entry will be returned.
+ * }
+ */
+function register_api_field( $object_type, $attribute, $args = array() ) {
+
+	$defaults = array(
+		'get_callback'    => null,
+		'update_callback' => null,
+		'schema'          => null,
+	);
+
+	$args = wp_parse_args( $args, $defaults );
+
+	global $wp_rest_additional_fields;
+
+	$object_types = (array) $object_type;
+
+	foreach ( $object_types as $object_type ) {
+		$wp_rest_additional_fields[ $object_type ][ $attribute ] = $args;
+	}
+}
+
+/**
+ * Registers rewrite rules for the API.
+ *
+ * @since 4.4.0
+ *
+ * @see rest_api_register_rewrites()
+ * @global WP $wp Current WordPress environment instance.
+ */
+function rest_api_init() {
+	rest_api_register_rewrites();
+
+	global $wp;
+	$wp->add_query_var( 'rest_route' );
+}
+
+/**
+ * Adds REST rewrite rules.
+ *
+ * @since 4.4.0
+ *
+ * @see add_rewrite_rule()
+ */
+function rest_api_register_rewrites() {
+	add_rewrite_rule( '^' . rest_get_url_prefix() . '/?$','index.php?rest_route=/','top' );
+	add_rewrite_rule( '^' . rest_get_url_prefix() . '/(.*)?','index.php?rest_route=/$matches[1]','top' );
+}
+
+/**
+ * Registers the default REST API filters.
+ *
+ * @since 4.4.0
+ *
+ * @internal This will live in default-filters.php
+ */
+function rest_api_default_filters() {
+	// Deprecated reporting.
+	add_action( 'deprecated_function_run', 'rest_handle_deprecated_function', 10, 3 );
+	add_filter( 'deprecated_function_trigger_error', '__return_false' );
+	add_action( 'deprecated_argument_run', 'rest_handle_deprecated_argument', 10, 3 );
+	add_filter( 'deprecated_argument_trigger_error', '__return_false' );
+
+	// Default serving.
+	add_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
+	add_filter( 'rest_post_dispatch', 'rest_send_allow_header', 10, 3 );
+
+	add_filter( 'rest_pre_dispatch', 'rest_handle_options_request', 10, 3 );
+}
+
+/**
+ * Loads the REST API.
+ *
+ * @since 4.4.0
+ *
+ */
+function rest_api_loaded() {
+	if ( empty( $GLOBALS['wp']->query_vars['rest_route'] ) ) {
+		return;
+	}
+
+	/**
+	 * Whether this is a REST Request.
+	 *
+	 * @var bool
+	 */
+	define( 'REST_REQUEST', true );
+
+	/** @var WP_REST_Server $wp_rest_server */
+	global $wp_rest_server;
+
+	/**
+	 * Filter the REST Server Class.
+	 *
+	 * This filter allows you to adjust the server class used by the API, using a
+	 * different class to handle requests.
+	 *
+	 * @since 4.4.0
+	 *
+	 * @param string $class_name The name of the server class. Default 'WP_REST_Server'.
+	 */
+	$wp_rest_server_class = apply_filters( 'wp_rest_server_class', 'WP_REST_Server' );
+	$wp_rest_server = new $wp_rest_server_class;
+
+	/**
+	 * Fires when preparing to serve an API request.
+	 *
+	 * Endpoint objects should be created and register their hooks on this action rather
+	 * than another action to ensure they're only loaded when needed.
+	 *
+	 * @since 4.4.0
+	 *
+	 * @param WP_REST_Server $wp_rest_server Server object.
+	 */
+	do_action( 'rest_api_init', $wp_rest_server );
+
+	// Fire off the request.
+	$wp_rest_server->serve_request( $GLOBALS['wp']->query_vars['rest_route'] );
+
+	// We're done.
+	die();
+}
+
+/**
+ * Retrieves the URL prefix for any API resource.
+ *
+ * @since 4.4.0
+ *
+ * @return string Prefix.
+ */
+function rest_get_url_prefix() {
+	/**
+	 * Filter the REST URL prefix.
+	 *
+	 * @since 4.4.0
+	 *
+	 * @param string $prefix URL prefix. Default 'wp-json'.
+	 */
+	return apply_filters( 'rest_url_prefix', 'wp-json' );
+}
+
+/**
+ * Retrieves the URL to a REST endpoint on a site.
+ *
+ * Note: The returned URL is NOT escaped.
+ *
+ * @since 4.4.0
+ *
+ * @todo Check if this is even necessary
+ *
+ * @param int    $blog_id Optional. Blog ID. Default of null returns URL for current blog.
+ * @param string $path    Optional. REST route. Default '/'.
+ * @param string $scheme  Optional. Sanitization scheme. Default 'json'.
+ * @return string Full URL to the endpoint.
+ */
+function get_rest_url( $blog_id = null, $path = '/', $scheme = 'json' ) {
+	if ( empty( $path ) ) {
+		$path = '/';
+	}
+
+	if ( is_multisite() && get_blog_option( $blog_id, 'permalink_structure' ) || get_option( 'permalink_structure' ) ) {
+		$url = get_home_url( $blog_id, rest_get_url_prefix(), $scheme );
+		$url .= '/' . ltrim( $path, '/' );
+	} else {
+		$url = trailingslashit( get_home_url( $blog_id, '', $scheme ) );
+
+		$path = '/' . ltrim( $path, '/' );
+
+		$url = add_query_arg( 'rest_route', $path, $url );
+	}
+
+	/**
+	 * Filter the REST URL.
+	 *
+	 * Use this filter to adjust the url returned by the `get_rest_url` function.
+	 *
+	 * @since 4.4.0
+	 *
+	 * @param string $url     REST URL.
+	 * @param string $path    REST route.
+	 * @param int    $blod_ig Blog ID.
+	 * @param string $scheme  Sanitization scheme.
+	 */
+	return apply_filters( 'rest_url', $url, $path, $blog_id, $scheme );
+}
+
+/**
+ * Retrieves the URL to a REST endpoint.
+ *
+ * Note: The returned URL is NOT escaped.
+ *
+ * @since 4.4.0
+ *
+ * @param string $path   Optional. REST route. Default empty.
+ * @param string $scheme Optional. Sanitization scheme. Default 'json'.
+ * @return string Full URL to the endpoint.
+ */
+function rest_url( $path = '', $scheme = 'json' ) {
+	return get_rest_url( null, $path, $scheme );
+}
+
+/**
+ * Do a REST request.
+ *
+ * Used primarily to route internal requests through WP_REST_Server.
+ *
+ * @since 4.4.0
+ *
+ * @global WP_REST_Server $wp_rest_server
+ *
+ * @param WP_REST_Request|string $request Request.
+ * @return WP_REST_Response REST response.
+ */
+function rest_do_request( $request ) {
+	global $wp_rest_server;
+	$request = rest_ensure_request( $request );
+	return $wp_rest_server->dispatch( $request );
+}
+
+/**
+ * Ensures request arguments are a request object (for consistency).
+ *
+ * @since 4.4.0
+ *
+ * @param array|WP_REST_Request $request Request to check.
+ * @return WP_REST_Request REST request instance.
+ */
+function rest_ensure_request( $request ) {
+	if ( $request instanceof WP_REST_Request ) {
+		return $request;
+	}
+
+	return new WP_REST_Request( 'GET', '', $request );
+}
+
+/**
+ * Ensures a REST response is a response object (for consistency).
+ *
+ * This implements WP_HTTP_Response, allowing usage of `set_status`/`header`/etc
+ * without needing to double-check the object. Will also allow WP_Error to indicate error
+ * responses, so users should immediately check for this value.
+ *
+ * @since 4.4.0
+ *
+ * @param WP_Error|WP_HTTP_Response|mixed $response Response to check.
+ * @return mixed WP_Error if response generated an error, WP_HTTP_Response if response
+ *               is a already an instance, otherwise returns a new WP_REST_Response instance.
+ */
+function rest_ensure_response( $response ) {
+	if ( is_wp_error( $response ) ) {
+		return $response;
+	}
+
+	if ( $response instanceof WP_HTTP_Response ) {
+		return $response;
+	}
+
+	return new WP_REST_Response( $response );
+}
+
+/**
+ * Handles _deprecated_function() errors.
+ *
+ * @since 4.4.0
+ *
+ * @param string $function    Function name.
+ * @param string $replacement Replacement function name.
+ * @param string $version     Version.
+ */
+function rest_handle_deprecated_function( $function, $replacement, $version ) {
+	if ( ! empty( $replacement ) ) {
+		$string = sprintf( __( '%1$s (since %2$s; use %3$s instead)' ), $function, $version, $replacement );
+	} else {
+		$string = sprintf( __( '%1$s (since %2$s; no alternative available)' ), $function, $version );
+	}
+
+	header( sprintf( 'X-WP-DeprecatedFunction: %s', $string ) );
+}
+
+/**
+ * Handles _deprecated_argument() errors.
+ *
+ * @since 4.4.0
+ *
+ * @param string $function    Function name.
+ * @param string $replacement Replacement function name.
+ * @param string $version     Version.
+ */
+function rest_handle_deprecated_argument( $function, $replacement, $version ) {
+	if ( ! empty( $replacement ) ) {
+		$string = sprintf( __( '%1$s (since %2$s; %3$s)' ), $function, $version, $replacement );
+	} else {
+		$string = sprintf( __( '%1$s (since %2$s; no alternative available)' ), $function, $version );
+	}
+
+	header( sprintf( 'X-WP-DeprecatedParam: %s', $string ) );
+}
+
+/**
+ * Sends Cross-Origin Resource Sharing headers with API requests.
+ *
+ * @since 4.4.0
+ *
+ * @param mixed $value Response data.
+ * @return mixed Response data.
+ */
+function rest_send_cors_headers( $value ) {
+	$origin = get_http_origin();
+
+	if ( $origin ) {
+		header( 'Access-Control-Allow-Origin: ' . esc_url_raw( $origin ) );
+		header( 'Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE' );
+		header( 'Access-Control-Allow-Credentials: true' );
+	}
+
+	return $value;
+}
+
+/**
+ * Handles OPTIONS requests for the server.
+ *
+ * This is handled outside of the server code, as it doesn't obey normal route
+ * mapping.
+ *
+ * @since 4.4.0
+ *
+ * @param mixed           $response Current response, either response or `null` to indicate pass-through.
+ * @param WP_REST_Server  $handler  ResponseHandler instance (usually WP_REST_Server).
+ * @param WP_REST_Request $request  The request that was used to make current response.
+ * @return WP_REST_Response Modified response, either response or `null` to indicate pass-through.
+ */
+function rest_handle_options_request( $response, $handler, $request ) {
+	if ( ! empty( $response ) || $request->get_method() !== 'OPTIONS' ) {
+		return $response;
+	}
+
+	$response = new WP_REST_Response();
+	$data = array();
+
+	$accept = array();
+
+	foreach ( $handler->get_routes() as $route => $endpoints ) {
+		$match = preg_match( '@^' . $route . '$@i', $request->get_route(), $args );
+
+		if ( ! $match ) {
+			continue;
+		}
+
+		$data = $handler->get_data_for_route( $route, $endpoints, 'help' );
+		$accept = array_merge( $accept, $data['methods'] );
+		break;
+	}
+	$response->header( 'Accept', implode( ', ', $accept ) );
+
+	$response->set_data( $data );
+	return $response;
+}
+
+/**
+ * Sends the "Allow" header to state all methods that can be sent to the current route.
+ *
+ * @since 4.4.0
+ *
+ * @param WP_REST_Response $response Current response being served.
+ * @param WP_REST_Server   $server   ResponseHandler instance (usually WP_REST_Server).
+ * @param WP_REST_Request  $request  The request that was used to make current response.
+ * @return WP_REST_Response Current response being served.
+ */
+function rest_send_allow_header( $response, $server, $request ) {
+
+	$matched_route = $response->get_matched_route();
+
+	if ( ! $matched_route ) {
+		return $response;
+	}
+
+	$routes = $server->get_routes();
+
+	$allowed_methods = array();
+
+	// Get the allowed methods across the routes.
+	foreach ( $routes[ $matched_route ] as $_handler ) {
+		foreach ( $_handler['methods'] as $handler_method => $value ) {
+
+			if ( ! empty( $_handler['permission_callback'] ) ) {
+
+				$permission = call_user_func( $_handler['permission_callback'], $request );
+
+				$allowed_methods[ $handler_method ] = true === $permission;
+			} else {
+				$allowed_methods[ $handler_method ] = true;
+			}
+		}
+	}
+
+	// Strip out all the methods that are not allowed (false values).
+	$allowed_methods = array_filter( $allowed_methods );
+
+	if ( $allowed_methods ) {
+		$response->header( 'Allow', implode( ', ', array_map( 'strtoupper', array_keys( $allowed_methods ) ) ) );
+	}
+
+	return $response;
+}
+
+/**
+ * Determines if the variable a list.
+ *
+ * A list would be defined as a numeric-indexed array.
+ *
+ * @since 4.4.0
+ *
+ * @param mixed $data Variable to check.
+ * @return bool Whether the variable is a list.
+ */
+function rest_is_list( $data ) {
+	if ( ! is_array( $data ) ) {
+		return false;
+	}
+
+	$keys = array_keys( $data );
+	$string_keys = array_filter( $keys, 'is_string' );
+	return count( $string_keys ) === 0;
 }
 
 /**
@@ -168,49 +638,6 @@ function rest_cookie_collect_status() {
 }
 
 /**
- * Retrieves the avatar urls in various sizes based on a given email address.
- *
- * @since 4.4.0
- *
- * @see get_avatar_url()
- *
- * @param string $email Email address.
- * @return array $urls Gravatar url for each size.
- */
-function rest_get_avatar_urls( $email ) {
-	$avatar_sizes = rest_get_avatar_sizes();
-
-	$urls = array();
-	foreach ( $avatar_sizes as $size ) {
-		$urls[ $size ] = get_avatar_url( $email, array( 'size' => $size ) );
-	}
-
-	return $urls;
-}
-
-/**
- * Retrieves the pixel sizes for avatars.
- *
- * @since 4.4.0
- *
- * @return array List of pixel sizes for avatars. Default `[ 24, 48, 96 ]`.
- */
-function rest_get_avatar_sizes() {
-	/**
-	 * Filter the REST avatar sizes.
-	 *
-	 * Use this filter to adjust the array of sizes returned by the
-	 * `rest_get_avatar_sizes` function.
-	 *
-	 * @since 4.4.0
-	 *
-	 * @param array $sizes An array of int values that are the pixel sizes for avatars.
-	 *                     Default `[ 24, 48, 96 ]`.
-	 */
-	return apply_filters( 'rest_avatar_sizes', array( 24, 48, 96 ) );
-}
-
-/**
  * Parses an RFC3339 timestamp into a DateTime.
  *
  * @since 4.4.0
@@ -257,87 +684,4 @@ function rest_get_date_with_gmt( $date, $force_utc = false ) {
 	$local = get_date_from_gmt( $utc );
 
 	return array( $local, $utc );
-}
-
-/**
- * Parses and formats a MySQL datetime (Y-m-d H:i:s) for ISO8601/RFC3339.
- *
- * Explicitly strips timezones, as datetimes are not saved with any timezone
- * information. Including any information on the offset could be misleading.
- *
- * @since 4.4.0
- *
- * @param string $date_string Date string to parse and format.
- * @return string Date formatted for ISO8601/RFC3339.
- */
-function rest_mysql_to_rfc3339( $date_string ) {
-	$formatted = mysql2date( 'c', $date_string, false );
-
-	// Strip timezone information
-	return preg_replace( '/(?:Z|[+-]\d{2}(?::\d{2})?)$/', '', $formatted );
-}
-
-
-/**
- * Retrieves the timezone object for the site.
- *
- * @since 4.4.0
- *
- * @return DateTimeZone DateTimeZone instance.
- */
-function rest_get_timezone() {
-	static $zone = null;
-
-	if ( null !== $zone ) {
-		return $zone;
-	}
-
-	$tzstring = get_option( 'timezone_string' );
-
-	if ( ! $tzstring ) {
-		// Create a UTC+- zone if no timezone string exists.
-		$current_offset = get_option( 'gmt_offset' );
-		if ( 0 === $current_offset ) {
-			$tzstring = 'UTC';
-		} elseif ( $current_offset < 0 ) {
-			$tzstring = 'Etc/GMT' . $current_offset;
-		} else {
-			$tzstring = 'Etc/GMT+' . $current_offset;
-		}
-	}
-	$zone = new DateTimeZone( $tzstring );
-
-	return $zone;
-}
-
-/**
- * Retrieves the avatar url for a user who provided a user ID or email address.
- *
- * get_avatar() doesn't return just the URL, so we have to extract it here.
- *
- * @since 4.4.0
- * @deprecated WPAPI-2.0 rest_get_avatar_urls()
- * @see rest_get_avatar_urls()
- *
- * @param string $email Email address.
- * @return string URL for the user's avatar, empty string otherwise.
- */
-function rest_get_avatar_url( $email ) {
-	_deprecated_function( 'rest_get_avatar_url', 'WPAPI-2.0', 'rest_get_avatar_urls' );
-
-	// Use the WP Core `get_avatar_url()` function introduced in 4.2.
-	if ( function_exists( 'get_avatar_url' ) ) {
-		return esc_url_raw( get_avatar_url( $email ) );
-	}
-
-	$avatar_html = get_avatar( $email );
-
-	// Strip the avatar url from the get_avatar img tag.
-	preg_match( '/src=["|\'](.+)[\&|"|\']/U', $avatar_html, $matches );
-
-	if ( isset( $matches[1] ) && ! empty( $matches[1] ) ) {
-		return esc_url_raw( $matches[1] );
-	}
-
-	return '';
 }

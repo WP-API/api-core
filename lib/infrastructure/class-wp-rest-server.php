@@ -589,11 +589,9 @@ class WP_REST_Server {
 					parse_str( $parsed['query'], $query_params );
 
 					// Ensure magic quotes are stripped.
-					// @codeCoverageIgnoreStart
 					if ( get_magic_quotes_gpc() ) {
 						$query_params = stripslashes_deep( $query_params );
 					}
-					// @codeCoverageIgnoreEnd
 				}
 
 				// Embedded resources get passed context=embed.

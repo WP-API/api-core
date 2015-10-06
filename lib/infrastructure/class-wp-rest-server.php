@@ -404,7 +404,7 @@ class WP_REST_Server {
 		 *
 		 * @since 4.4.0
 		 *
-		 * @param WP_HTTP_ResponseInterface $result  Result to send to the client. Usually a WP_REST_Response.
+		 * @param WP_HTTP_Response          $result  Result to send to the client. Usually a WP_REST_Response.
 		 * @param WP_REST_Server            $this    Server instance.
 		 * @param WP_REST_Request           $request Request used to generate the response.
 		 */
@@ -432,7 +432,7 @@ class WP_REST_Server {
 		 *
 		 * @param bool                      $served  Whether the request has already been served.
 		 *                                           Default false.
-		 * @param WP_HTTP_ResponseInterface $result  Result to send to the client. Usually a WP_REST_Response.
+		 * @param WP_HTTP_Response          $result  Result to send to the client. Usually a WP_REST_Response.
 		 * @param WP_REST_Request           $request Request used to generate the response.
 		 * @param WP_REST_Server            $this    Server instance.
 		 */
@@ -589,11 +589,9 @@ class WP_REST_Server {
 					parse_str( $parsed['query'], $query_params );
 
 					// Ensure magic quotes are stripped.
-					// @codeCoverageIgnoreStart
 					if ( get_magic_quotes_gpc() ) {
 						$query_params = stripslashes_deep( $query_params );
 					}
-					// @codeCoverageIgnoreEnd
 				}
 
 				// Embedded resources get passed context=embed.

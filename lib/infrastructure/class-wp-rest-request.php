@@ -704,11 +704,9 @@ class WP_REST_Request implements ArrayAccess {
 		 *
 		 * NOTE: Do not refactor to use `wp_unslash`.
 		 */
-		// @codeCoverageIgnoreStart
 		if ( get_magic_quotes_gpc() ) {
 			$params = stripslashes_deep( $params );
 		}
-		// @codeCoverageIgnoreEnd
 
 		/*
 		 * Add to the POST parameters stored internally. If a user has already

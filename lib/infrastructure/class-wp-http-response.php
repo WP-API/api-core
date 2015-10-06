@@ -11,10 +11,8 @@
  * Core class used to prepare HTTP responses.
  *
  * @since 4.4.0
- *
- * @see WP_HTTP_ResponseInterface
  */
-class WP_HTTP_Response implements WP_HTTP_ResponseInterface {
+class WP_HTTP_Response {
 
 	/**
 	 * Response data.
@@ -65,8 +63,6 @@ class WP_HTTP_Response implements WP_HTTP_ResponseInterface {
 	 * @since 4.4.0
 	 * @access public
 	 *
-	 * @see WP_HTTP_ResponseInterface::get_headers()
-	 *
 	 * @return array Map of header name to header value.
 	 */
 	public function get_headers() {
@@ -110,8 +106,6 @@ class WP_HTTP_Response implements WP_HTTP_ResponseInterface {
 	 * @since 4.4.0
 	 * @access public
 	 *
-	 * @see WP_HTTP_ResponseInterface::get_status()
-	 *
 	 * @return int The 3-digit HTTP status code.
 	 */
 	public function get_status() {
@@ -135,8 +129,6 @@ class WP_HTTP_Response implements WP_HTTP_ResponseInterface {
 	 *
 	 * @since 4.4.0
 	 * @access public
-	 *
-	 * @see WP_HTTP_ResponseInterface::get_status()
 	 *
 	 * @return mixed Response data.
 	 */

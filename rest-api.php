@@ -20,16 +20,16 @@ include_once( dirname( __FILE__ ) . '/wp-includes/compat.php' );
 include_once( dirname( __FILE__ ) . '/wp-includes/functions.php' );
 
 /** WP_REST_Server class */
-include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/infrastructure/class-wp-rest-server.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/class-wp-rest-server.php' );
 
 /** WP_HTTP_Response class */
-include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/infrastructure/class-wp-http-response.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/class-wp-http-response.php' );
 
 /** WP_REST_Response class */
-include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/infrastructure/class-wp-rest-response.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/class-wp-rest-response.php' );
 
 /** WP_REST_Request class */
-require_once( dirname( __FILE__ ) . '/wp-includes/rest-api/infrastructure/class-wp-rest-request.php' );
+require_once( dirname( __FILE__ ) . '/wp-includes/rest-api/class-wp-rest-request.php' );
 
 /** REST functions */
 include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/rest-functions.php' );

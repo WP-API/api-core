@@ -1,5 +1,5 @@
 <phpunit
-	bootstrap="tests/bootstrap.php"
+	bootstrap="phpunit/bootstrap.php"
 	backupGlobals="false"
 	colors="true"
 	convertErrorsToExceptions="true"
@@ -9,7 +9,7 @@
 	<testsuites>
 		<!-- Default test suite to run all tests -->
 		<testsuite>
-			<directory suffix=".php">tests</directory>
+			<directory suffix=".php">phpunit</directory>
 		</testsuite>
 	</testsuites>
 	<filter>

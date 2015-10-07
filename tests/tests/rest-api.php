@@ -1,24 +1,28 @@
 <?php
-
 /**
- * Base plugin tests to ensure the JSON API is loaded correctly. These will
- * likely need the most changes when merged into core.
- *
- * @group json_api
+ * REST API functions.
  *
  * @package WordPress
- * @subpackage JSON API
+ * @subpackage REST API
  */
-class WP_Test_REST_Plugin extends WP_UnitTestCase {
+
+require_once ABSPATH . 'wp-admin/includes/admin.php';
+//require_once ABSPATH . WPINC . '/rest-api.php';
+
+/**
+ * @group restapi
+ */
+class Tests_REST_API extends WP_UnitTestCase {
 	public function setUp() {
-		// Override the normal server with our spying server
-		$GLOBALS['wp_rest_server'] = new WP_Test_Spy_REST_Server();
+		// Override the normal server with our spying server.
+		$GLOBALS['wp_rest_server'] = new Spy_REST_Server();
+		parent::setup();
 	}
 
 	/**
 	 * The plugin should be installed and activated.
 	 */
-	function test_plugin_activated() {
+	function test_rest_api_activated() {
 		$this->assertTrue( class_exists( 'WP_REST_Server' ) );
 	}
 
@@ -31,9 +35,9 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Check that a single route is canonicalized
+	 * Check that a single route is canonicalized.
 	 *
-	 * Ensures that single and multiple routes are handled correctly
+	 * Ensures that single and multiple routes are handled correctly.
 	 */
 	public function test_route_canonicalized() {
 		register_rest_route( 'test-ns', '/test', array(
@@ -41,17 +45,17 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 			'callback' => '__return_null',
 		) );
 
-		// Check the route was registered correctly
+		// Check the route was registered correctly.
 		$endpoints = $GLOBALS['wp_rest_server']->get_raw_endpoint_data();
 		$this->assertArrayHasKey( '/test-ns/test', $endpoints );
 
-		// Check the route was wrapped in an array
+		// Check the route was wrapped in an array.
 		$endpoint = $endpoints['/test-ns/test'];
 		$this->assertArrayNotHasKey( 'callback', $endpoint );
 		$this->assertArrayHasKey( 'namespace', $endpoint );
 		$this->assertEquals( 'test-ns', $endpoint['namespace'] );
 
-		// Grab the filtered data
+		// Grab the filtered data.
 		$filtered_endpoints = $GLOBALS['wp_rest_server']->get_routes();
 		$this->assertArrayHasKey( '/test-ns/test', $filtered_endpoints );
 		$endpoint = $filtered_endpoints['/test-ns/test'];
@@ -62,9 +66,9 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Check that a single route is canonicalized
+	 * Check that a single route is canonicalized.
 	 *
-	 * Ensures that single and multiple routes are handled correctly
+	 * Ensures that single and multiple routes are handled correctly.
 	 */
 	public function test_route_canonicalized_multiple() {
 		register_rest_route( 'test-ns', '/test', array(
@@ -78,11 +82,11 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 			),
 		) );
 
-		// Check the route was registered correctly
+		// Check the route was registered correctly.
 		$endpoints = $GLOBALS['wp_rest_server']->get_raw_endpoint_data();
 		$this->assertArrayHasKey( '/test-ns/test', $endpoints );
 
-		// Check the route was wrapped in an array
+		// Check the route was wrapped in an array.
 		$endpoint = $endpoints['/test-ns/test'];
 		$this->assertArrayNotHasKey( 'callback', $endpoint );
 		$this->assertArrayHasKey( 'namespace', $endpoint );
@@ -92,7 +96,7 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 		$endpoint = $filtered_endpoints['/test-ns/test'];
 		$this->assertCount( 2, $endpoint );
 
-		// Check for both methods
+		// Check for both methods.
 		foreach ( array( 0, 1 ) as $key ) {
 			$this->assertArrayHasKey( 'callback', $endpoint[ $key ] );
 			$this->assertArrayHasKey( 'methods',  $endpoint[ $key ] );
@@ -101,7 +105,7 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Check that routes are merged by default
+	 * Check that routes are merged by default.
 	 */
 	public function test_route_merge() {
 		register_rest_route( 'test-ns', '/test', array(
@@ -113,14 +117,14 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 			'callback' => '__return_null',
 		) );
 
-		// Check both routes exist
+		// Check both routes exist.
 		$endpoints = $GLOBALS['wp_rest_server']->get_routes();
 		$endpoint = $endpoints['/test-ns/test'];
 		$this->assertCount( 2, $endpoint );
 	}
 
 	/**
-	 * Check that we can override routes
+	 * Check that we can override routes.
 	 */
 	public function test_route_override() {
 		register_rest_route( 'test-ns', '/test', array(
@@ -134,12 +138,12 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 			'should_exist' => true,
 		), true );
 
-		// Check we only have one route
+		// Check we only have one route.
 		$endpoints = $GLOBALS['wp_rest_server']->get_routes();
 		$endpoint = $endpoints['/test-ns/test'];
 		$this->assertCount( 1, $endpoint );
 
-		// Check it's the right one
+		// Check it's the right one.
 		$this->assertArrayHasKey( 'should_exist', $endpoint[0] );
 		$this->assertTrue( $endpoint[0]['should_exist'] );
 	}
@@ -148,8 +152,8 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	 * The rest_route query variable should be registered.
 	 */
 	function test_rest_route_query_var() {
-		global $wp;
-		$this->assertTrue( in_array( 'rest_route', $wp->public_query_vars ) );
+		rest_api_init();
+		$this->assertTrue( in_array( 'rest_route', $GLOBALS['wp']->public_query_vars ) );
 	}
 
 	public function test_route_method() {
@@ -164,7 +168,7 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The 'methods' arg should accept a single value as well as array
+	 * The 'methods' arg should accept a single value as well as array.
 	 */
 	public function test_route_method_string() {
 		register_rest_route( 'test-ns', '/test', array(
@@ -178,7 +182,7 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The 'methods' arg should accept a single value as well as array
+	 * The 'methods' arg should accept a single value as well as array.
 	 */
 	public function test_route_method_array() {
 		register_rest_route( 'test-ns', '/test', array(
@@ -192,7 +196,7 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The 'methods' arg should a comma seperated string
+	 * The 'methods' arg should a comma seperated string.
 	 */
 	public function test_route_method_comma_seperated() {
 		register_rest_route( 'test-ns', '/test', array(
@@ -221,7 +225,7 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Ensure that the OPTIONS handler doesn't kick in for non-OPTIONS requests
+	 * Ensure that the OPTIONS handler doesn't kick in for non-OPTIONS requests.
 	 */
 	public function test_options_request_not_options() {
 		register_rest_route( 'test-ns', '/test', array(
@@ -240,12 +244,12 @@ class WP_Test_REST_Plugin extends WP_UnitTestCase {
 	 * whether the blog is configured with pretty permalink support or not.
 	 */
 	public function test_rest_url_generation() {
-		// In pretty permalinks case, we expect a path of wp-json/ with no query
+		// In pretty permalinks case, we expect a path of wp-json/ with no query.
 		update_option( 'permalink_structure', '/%year%/%monthnum%/%day%/%postname%/' );
 		$this->assertEquals( 'http://' . WP_TESTS_DOMAIN . '/wp-json/', get_rest_url() );
 
-		// In non-pretty case, we get a query string to invoke the rest router
 		update_option( 'permalink_structure', '' );
+		// In non-pretty case, we get a query string to invoke the rest router.
 		$this->assertEquals( 'http://' . WP_TESTS_DOMAIN . '/?rest_route=/', get_rest_url() );
 	}
 }

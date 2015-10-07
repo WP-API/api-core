@@ -1,18 +1,21 @@
 <?php
-
 /**
  * Unit tests covering WP_REST_Server functionality.
  *
  * @package WordPress
- * @subpackage JSON API
+ * @subpackage REST API
  */
-class WP_Test_REST_Server extends WP_Test_REST_TestCase {
+
+/**
+ * @group restapi
+ */
+class Tests_REST_Server extends WP_Test_REST_TestCase {
 	public function setUp() {
 		parent::setUp();
 
 		/** @var WP_REST_Server $wp_rest_server */
 		global $wp_rest_server;
-		$this->server = $wp_rest_server = new WP_Test_Spy_REST_Server();
+		$this->server = $wp_rest_server = new Spy_REST_Server();
 
 		do_action( 'rest_api_init', $this->server );
 	}
@@ -30,13 +33,13 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 		$response = new WP_REST_Response( $data, $status );
 		$response->header( 'Arbitrary-Header', 'value' );
 
-		// Check header concatenation as well
+		// Check header concatenation as well.
 		$response->header( 'Multiple', 'maybe' );
 		$response->header( 'Multiple', 'yes', false );
 
 		$envelope_response = $this->server->envelope_response( $response, false );
 
-		// The envelope should still be a response, but with defaults
+		// The envelope should still be a response, but with defaults.
 		$this->assertInstanceOf( 'WP_REST_Response', $envelope_response );
 		$this->assertEquals( 200, $envelope_response->get_status() );
 		$this->assertEmpty( $envelope_response->get_headers() );
@@ -105,7 +108,7 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 
 	/**
 	 * Pass a capability which the user does not have, this should
-	 * result in a 403 error
+	 * result in a 403 error.
 	 */
 	function test_rest_route_capability_authorization_fails() {
 		register_rest_route( 'test-ns', '/test', array(
@@ -123,7 +126,7 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 
 	/**
 	 * An editor should be able to get access to an route with the
-	 * edit_posts capability
+	 * edit_posts capability.
 	 */
 	function test_rest_route_capability_authorization() {
 		register_rest_route( 'test-ns', '/test', array(
@@ -146,7 +149,7 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 
 	/**
 	 * An "Allow" HTTP header should be sent with a request
-	 * for all available methods on that route
+	 * for all available methods on that route.
 	 */
 	function test_allow_header_sent() {
 
@@ -239,7 +242,7 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 		$response = $this->server->error_to_response( $error );
 		$this->assertInstanceOf( 'WP_REST_Response', $response );
 
-		// Make sure we default to a 500 error
+		// Make sure we default to a 500 error.
 		$this->assertEquals( 500, $response->get_status() );
 
 		$data = $response->get_data();
@@ -280,7 +283,7 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 	}
 
 	public function test_json_error_with_status() {
-		$stub = $this->getMockBuilder( 'WP_Test_Spy_REST_Server' )
+		$stub = $this->getMockBuilder( 'Spy_REST_Server' )
 		             ->setMethods( array( 'set_status' ) )
 		             ->getMock();
 
@@ -322,17 +325,17 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 	}
 
 	public function test_link_embedding() {
-		// Register our testing route
+		// Register our testing route.
 		$this->server->register_route( 'test', '/test/embeddable', array(
 			'methods' => 'GET',
 			'callback' => array( $this, 'embedded_response_callback' ),
 		) );
 		$response = new WP_REST_Response();
 
-		// External links should be ignored
+		// External links should be ignored.
 		$response->add_link( 'alternate', 'http://not-api.example.com/', array( 'embeddable' => true ) );
 
-		// All others should be embedded
+		// All others should be embedded.
 		$response->add_link( 'alternate', rest_url( '/test/embeddable' ), array( 'embeddable' => true ) );
 
 		$data = $this->server->response_to_data( $response, true );
@@ -346,7 +349,7 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 		$this->assertArrayNotHasKey( 'code', $alternate[1] );
 		$this->assertTrue( $alternate[1]['hello'] );
 
-		// Ensure the context is set to embed when requesting
+		// Ensure the context is set to embed when requesting.
 		$this->assertEquals( 'embed', $alternate[1]['parameters']['context'] );
 	}
 
@@ -354,14 +357,14 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 	 * @depends test_link_embedding
 	 */
 	public function test_link_embedding_self() {
-		// Register our testing route
+		// Register our testing route.
 		$this->server->register_route( 'test', '/test/embeddable', array(
 			'methods' => 'GET',
 			'callback' => array( $this, 'embedded_response_callback' ),
 		) );
 		$response = new WP_REST_Response();
 
-		// 'self' should be ignored
+		// 'self' should be ignored.
 		$response->add_link( 'self', rest_url( '/test/notembeddable' ), array( 'embeddable' => true ) );
 
 		$data = $this->server->response_to_data( $response, true );
@@ -373,7 +376,7 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 	 * @depends test_link_embedding
 	 */
 	public function test_link_embedding_params() {
-		// Register our testing route
+		// Register our testing route.
 		$this->server->register_route( 'test', '/test/embeddable', array(
 			'methods' => 'GET',
 			'callback' => array( $this, 'embedded_response_callback' ),
@@ -395,7 +398,7 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 	 * @depends test_link_embedding_params
 	 */
 	public function test_link_embedding_error() {
-		// Register our testing route
+		// Register our testing route.
 		$this->server->register_route( 'test', '/test/embeddable', array(
 			'methods' => 'GET',
 			'callback' => array( $this, 'embedded_response_callback' ),
@@ -409,7 +412,7 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 		$this->assertArrayHasKey( '_embedded', $data );
 		$this->assertArrayHasKey( 'up', $data['_embedded'] );
 
-		// Check that errors are embedded correctly
+		// Check that errors are embedded correctly.
 		$up = $data['_embedded']['up'];
 		$this->assertCount( 1, $up );
 
@@ -420,7 +423,7 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 	}
 
 	/**
-	 * Ensure embedding is a no-op without links in the data
+	 * Ensure embedding is a no-op without links in the data.
 	 */
 	public function test_link_embedding_without_links() {
 		$data = array(
@@ -509,10 +512,10 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 		$this->assertArrayHasKey( 'authentication', $data );
 		$this->assertArrayHasKey( 'routes', $data );
 
-		// Check namespace data
+		// Check namespace data.
 		$this->assertContains( 'test/example', $data['namespaces'] );
 
-		// Check the route
+		// Check the route.
 		$this->assertArrayHasKey( '/test/example/some-route', $data['routes'] );
 		$route = $data['routes']['/test/example/some-route'];
 		$this->assertEquals( 'test/example', $route['namespace'] );
@@ -546,14 +549,14 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 		$index = rest_ensure_response( $server->get_namespace_index( $request ) );
 		$data = $index->get_data();
 
-		// Check top-level
+		// Check top-level.
 		$this->assertEquals( 'test/example', $data['namespace'] );
 		$this->assertArrayHasKey( 'routes', $data );
 
 		// Check we have the route we expect...
 		$this->assertArrayHasKey( '/test/example/some-route', $data['routes'] );
 
-		// ...and none we don't
+		// ...and none we don't.
 		$this->assertArrayNotHasKey( '/test/another/route', $data['routes'] );
 	}
 
@@ -576,5 +579,4 @@ class WP_Test_REST_Server extends WP_Test_REST_TestCase {
 		$this->assertContains( 'test/example', $namespaces );
 		$this->assertContains( 'test/another', $namespaces );
 	}
-
 }

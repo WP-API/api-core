@@ -18,46 +18,6 @@ require_once( ABSPATH . 'wp-admin/includes/admin.php' );
 class WP_REST_Server {
 
 	/**
-	 * GET transport method.
-	 *
-	 * @since 4.4.0
-	 * @var string
-	 */
-	const METHOD_GET = 'GET';
-
-	/**
-	 * POST transport method.
-	 *
-	 * @since 4.4.0
-	 * @var string
-	 */
-	const METHOD_POST = 'POST';
-
-	/**
-	 * PUT transport method.
-	 *
-	 * @since 4.4.0
-	 * @var string
-	 */
-	const METHOD_PUT = 'PUT';
-
-	/**
-	 * PATCH transport method.
-	 *
-	 * @since 4.4.0
-	 * @var string
-	 */
-	const METHOD_PATCH = 'PATCH';
-
-	/**
-	 * DELETE transport method.
-	 *
-	 * @since 4.4.0
-	 * @var string
-	 */
-	const METHOD_DELETE = 'DELETE';
-
-	/**
 	 * Alias for GET transport method.
 	 *
 	 * @since 4.4.0
@@ -96,23 +56,6 @@ class WP_REST_Server {
 	 * @var string
 	 */
 	const ALLMETHODS = 'GET, POST, PUT, PATCH, DELETE';
-
-	/**
-	 * Maps HTTP verbs to constants.
-	 *
-	 * @since 4.4.0
-	 * @access public
-	 * @static
-	 * @var array
-	 */
-	public static $method_map = array(
-		'HEAD'   => self::METHOD_GET,
-		'GET'    => self::METHOD_GET,
-		'POST'   => self::METHOD_POST,
-		'PUT'    => self::METHOD_PUT,
-		'PATCH'  => self::METHOD_PATCH,
-		'DELETE' => self::METHOD_DELETE,
-	);
 
 	/**
 	 * Namespaces registered to the server.

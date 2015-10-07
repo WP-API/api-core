@@ -436,7 +436,7 @@ class WP_REST_Request implements ArrayAccess {
 	 * @since 4.4.0
 	 * @access public
 	 *
-	 * @return array Map of key to value
+	 * @return array Map of key to value.
 	 */
 	public function get_params() {
 		$order = $this->get_parameter_order();
@@ -458,7 +458,7 @@ class WP_REST_Request implements ArrayAccess {
 	 * @since 4.4.0
 	 * @access public
 	 *
-	 * @return array Parameter map of key to value
+	 * @return array Parameter map of key to value.
 	 */
 	public function get_url_params() {
 		return $this->params['URL'];
@@ -689,7 +689,7 @@ class WP_REST_Request implements ArrayAccess {
 
 		/*
 		 * Check that we got URL-encoded. Treat a missing content-type as
-		 * URL-encoded for maximum compatibility
+		 * URL-encoded for maximum compatibility.
 		 */
 		$content_type = $this->get_content_type();
 

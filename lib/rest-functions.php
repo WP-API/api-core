@@ -24,7 +24,7 @@ function register_rest_route( $namespace, $route, $args = array(), $override = f
 	global $wp_rest_server;
 
 	if ( isset( $args['callback'] ) ) {
-		// Upgrade a single set to multiple
+		// Upgrade a single set to multiple.
 		$args = array( $args );
 	}
 
@@ -35,7 +35,7 @@ function register_rest_route( $namespace, $route, $args = array(), $override = f
 	);
 	foreach ( $args as $key => &$arg_group ) {
 		if ( ! is_numeric( $arg_group ) ) {
-			// Route option, skip here
+			// Route option, skip here.
 			continue;
 		}
 
@@ -153,7 +153,6 @@ function rest_api_default_filters() {
  * Loads the REST API.
  *
  * @since 4.4.0
- *
  */
 function rest_api_loaded() {
 	if ( empty( $GLOBALS['wp']->query_vars['rest_route'] ) ) {

@@ -46,7 +46,7 @@ class WP_REST_Response extends WP_HTTP_Response {
 	/**
 	 * Adds a link to the response.
 	 *
-	 * @internal The $rel parameter is first, as this looks nicer when sending multiple
+	 * @internal The $rel parameter is first, as this looks nicer when sending multiple.
 	 *
 	 * @since 4.4.0
 	 * @access public
@@ -142,7 +142,7 @@ class WP_REST_Response extends WP_HTTP_Response {
 	/**
 	 * Sets a single link header.
 	 *
-	 * @internal The $rel parameter is first, as this looks nicer when sending multiple
+	 * @internal The $rel parameter is first, as this looks nicer when sending multiple.
 	 *
 	 * @since 4.4.0
 	 * @access public

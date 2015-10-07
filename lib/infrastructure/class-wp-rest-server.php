@@ -404,9 +404,9 @@ class WP_REST_Server {
 		 *
 		 * @since 4.4.0
 		 *
-		 * @param WP_HTTP_Response          $result  Result to send to the client. Usually a WP_REST_Response.
-		 * @param WP_REST_Server            $this    Server instance.
-		 * @param WP_REST_Request           $request Request used to generate the response.
+		 * @param WP_HTTP_Response $result  Result to send to the client. Usually a WP_REST_Response.
+		 * @param WP_REST_Server   $this    Server instance.
+		 * @param WP_REST_Request  $request Request used to generate the response.
 		 */
 		$result = apply_filters( 'rest_post_dispatch', rest_ensure_response( $result ), $this, $request );
 
@@ -430,11 +430,11 @@ class WP_REST_Server {
 		 *
 		 * @since 4.4.0
 		 *
-		 * @param bool                      $served  Whether the request has already been served.
+		 * @param bool             $served  Whether the request has already been served.
 		 *                                           Default false.
-		 * @param WP_HTTP_Response          $result  Result to send to the client. Usually a WP_REST_Response.
-		 * @param WP_REST_Request           $request Request used to generate the response.
-		 * @param WP_REST_Server            $this    Server instance.
+		 * @param WP_HTTP_Response $result  Result to send to the client. Usually a WP_REST_Response.
+		 * @param WP_REST_Request  $request Request used to generate the response.
+		 * @param WP_REST_Server   $this    Server instance.
 		 */
 		$served = apply_filters( 'rest_pre_serve_request', false, $result, $request, $this );
 
@@ -968,8 +968,6 @@ class WP_REST_Server {
 	 * Retrieves the site index.
 	 *
 	 * This endpoint describes the capabilities of the site.
-	 *
-	 * @todo Should we generate text documentation too based on PHPDoc?
 	 *
 	 * @since 4.4.0
 	 * @access public

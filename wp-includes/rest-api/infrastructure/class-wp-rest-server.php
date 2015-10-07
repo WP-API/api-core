@@ -98,30 +98,6 @@ class WP_REST_Server {
 	const ALLMETHODS = 'GET, POST, PUT, PATCH, DELETE';
 
 	/**
-	 * Does the endpoint accept raw JSON entities?
-	 *
-	 * @since 4.4.0
-	 * @var int
-	 */
-	const ACCEPT_RAW = 64;
-
-	/**
-	 * Does the endpoint accept encoded JSON?
-	 *
-	 * @since 4.4.0
-	 * @var int
-	 */
-	const ACCEPT_JSON = 128;
-
-	/**
-	 * Should we hide this endpoint from the index?
-	 *
-	 * @since 4.4.0
-	 * @var int
-	 */
-	const HIDDEN_ENDPOINT = 256;
-
-	/**
 	 * Maps HTTP verbs to constants.
 	 *
 	 * @since 4.4.0

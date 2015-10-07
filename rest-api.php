@@ -14,28 +14,28 @@
 define( 'REST_API_VERSION', '2.0' );
 
 /** Compatibility shims for PHP functions */
-include_once( dirname( __FILE__ ) . '/lib/compat.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/compat.php' );
 
 /** Main API functions */
-include_once( dirname( __FILE__ ) . '/lib/functions.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/functions.php' );
 
 /** WP_REST_Server class */
-include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-rest-server.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/infrastructure/class-wp-rest-server.php' );
 
 /** WP_HTTP_Response class */
-include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-http-response.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/infrastructure/class-wp-http-response.php' );
 
 /** WP_REST_Response class */
-include_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-rest-response.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/infrastructure/class-wp-rest-response.php' );
 
 /** WP_REST_Request class */
-require_once( dirname( __FILE__ ) . '/lib/infrastructure/class-wp-rest-request.php' );
+require_once( dirname( __FILE__ ) . '/wp-includes/rest-api/infrastructure/class-wp-rest-request.php' );
 
 /** REST functions */
-include_once( dirname( __FILE__ ) . '/lib/rest-functions.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/rest-functions.php' );
 
 /** REST filters */
-include_once( dirname( __FILE__ ) . '/lib/filters.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/filters.php' );
 
 /**
  * Determines if the rewrite rules should be flushed.

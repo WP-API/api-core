@@ -410,7 +410,7 @@ class WP_REST_Server {
 		}
 		if ( $embed ) {
 			// Determine if this is a numeric array.
-			if ( rest_is_list( $data ) ) {
+			if ( wp_is_numeric_array( $data ) ) {
 				$data = array_map( array( $this, 'embed_links' ), $data );
 			} else {
 				$data = $this->embed_links( $data );

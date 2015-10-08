@@ -484,26 +484,6 @@ function rest_send_allow_header( $response, $server, $request ) {
 }
 
 /**
- * Determines if the variable a list.
- *
- * A list would be defined as a numeric-indexed array.
- *
- * @since 4.4.0
- *
- * @param mixed $data Variable to check.
- * @return bool Whether the variable is a list.
- */
-function rest_is_list( $data ) {
-	if ( ! is_array( $data ) ) {
-		return false;
-	}
-
-	$keys = array_keys( $data );
-	$string_keys = array_filter( $keys, 'is_string' );
-	return count( $string_keys ) === 0;
-}
-
-/**
  * Adds the REST API URL to the WP RSD endpoint.
  *
  * @since 4.4.0

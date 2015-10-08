@@ -401,7 +401,7 @@ class WP_REST_Server {
 	 * }
 	 */
 	public function response_to_data( $response, $embed ) {
-		$data  = $this->prepare_response( $response->get_data() );
+		$data  = $response->get_data();
 		$links = $this->get_response_links( $response );
 
 		if ( ! empty( $links ) ) {
@@ -1158,52 +1158,6 @@ class WP_REST_Server {
 		}
 
 		return $HTTP_RAW_POST_DATA;
-	}
-
-	/**
-	 * Prepares response data to be serialized to JSON.
-	 *
-	 * This supports the JsonSerializable interface for PHP 5.2-5.3 as well.
-	 *
-	 * @since 4.4.0
-	 * @access public
-	 *
-	 * @codeCoverageIgnore This is a compatibility shim.
-	 *
-	 * @param mixed $data Native representation.
-	 * @return array|string Data ready for `json_encode()`.
-	 */
-	public function prepare_response( $data ) {
-		if ( ! defined( 'WP_REST_SERIALIZE_COMPATIBLE' ) || WP_REST_SERIALIZE_COMPATIBLE === false ) {
-			return $data;
-		}
-
-		switch ( gettype( $data ) ) {
-			case 'boolean':
-			case 'integer':
-			case 'double':
-			case 'string':
-			case 'NULL':
-				// These values can be passed through.
-				return $data;
-
-			case 'array':
-				// Arrays must be mapped in case they also return objects.
-				return array_map( array( $this, 'prepare_response' ), $data );
-
-			case 'object':
-				if ( $data instanceof JsonSerializable ) {
-					$data = $data->jsonSerialize();
-				} else {
-					$data = get_object_vars( $data );
-				}
-
-				// Now, pass the array (or whatever was returned from jsonSerialize through.).
-				return $this->prepare_response( $data );
-
-			default:
-				return null;
-		}
 	}
 
 	/**

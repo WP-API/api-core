@@ -226,17 +226,15 @@ function rest_get_url_prefix() {
  *
  * @since 4.4.0
  *
- * @todo Check if this is even necessary
- *
- * @param int    $blog_id Optional. Blog ID. Default of null returns URL for current blog.
- * @param string $path    Optional. REST route. Default '/'.
+ * @param string $namespace Plugin or theme namespace for the route.
+ * @param string $route    Optional. REST route. Default '/'.
  * @param string $scheme  Optional. Sanitization scheme. Default 'json'.
+ * @param int    $blog_id Optional. Blog ID. Default of null returns URL for current blog.
  * @return string Full URL to the endpoint.
  */
-function get_rest_url( $blog_id = null, $path = '/', $scheme = 'json' ) {
-	if ( empty( $path ) ) {
-		$path = '/';
-	}
+function get_rest_url( $namespace, $route = '/', $scheme = 'json', $blog_id = null ) {
+
+	$path = '/' . trim( $namespace, '/' ) . '/' . trim( $route, '/' );
 
 	if ( is_multisite() && get_blog_option( $blog_id, 'permalink_structure' ) || get_option( 'permalink_structure' ) ) {
 		$url = get_home_url( $blog_id, rest_get_url_prefix(), $scheme );
@@ -256,12 +254,13 @@ function get_rest_url( $blog_id = null, $path = '/', $scheme = 'json' ) {
 	 *
 	 * @since 4.4.0
 	 *
-	 * @param string $url     REST URL.
-	 * @param string $path    REST route.
-	 * @param int    $blod_ig Blog ID.
-	 * @param string $scheme  Sanitization scheme.
+	 * @param string $url       REST URL.
+	 * @param string $namespace Route namespace.
+	 * @param string $route     REST route.
+	 * @param int    $blod_ig   Blog ID.
+	 * @param string $scheme    Sanitization scheme.
 	 */
-	return apply_filters( 'rest_url', $url, $path, $blog_id, $scheme );
+	return apply_filters( 'rest_url', $url, $namespace, $route, $blog_id, $scheme );
 }
 
 /**
@@ -271,12 +270,13 @@ function get_rest_url( $blog_id = null, $path = '/', $scheme = 'json' ) {
  *
  * @since 4.4.0
  *
- * @param string $path   Optional. REST route. Default empty.
- * @param string $scheme Optional. Sanitization scheme. Default 'json'.
+ * @param string $namespace Plugin or theme namespace for the route.
+ * @param string $route     Optional. REST route. Default '/'.
+ * @param string $scheme    Optional. Sanitization scheme. Default 'json'.
  * @return string Full URL to the endpoint.
  */
-function rest_url( $path = '', $scheme = 'json' ) {
-	return get_rest_url( null, $path, $scheme );
+function rest_url( $namespace, $route = '/', $scheme = 'json' ) {
+	return get_rest_url( $namespace, $route, $scheme );
 }
 
 /**

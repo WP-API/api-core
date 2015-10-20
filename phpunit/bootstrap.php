@@ -32,14 +32,10 @@ if ( false !== getenv( 'WP_DEVELOP_DIR' ) ) {
 require $test_root . '/includes/functions.php';
 
 function _manually_load_plugin() {
-	require dirname( __FILE__ ) . '/../plugin.php';
+	require dirname( __FILE__ ) . '/../../plugin.php';
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
 require $test_root . '/includes/bootstrap.php';
 
 define( 'REST_TESTS_IMPOSSIBLY_HIGH_NUMBER', 99999999 );
-
-// Helper classes
-require_once dirname( __FILE__ ) . '/includes/testcase-rest-api.php';
-require_once dirname( __FILE__ ) . '/includes/spy-rest-server.php';

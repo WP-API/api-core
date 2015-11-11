@@ -17,7 +17,12 @@ define( 'REST_API_VERSION', '2.0' );
 include_once( dirname( __FILE__ ) . '/wp-includes/compat.php' );
 
 /** Core HTTP Request API */
-include_once( dirname( __FILE__ ) . '/wp-includes/http.php' );
+if ( file_exists( ABSPATH . WPINC . '/class-wp-http-response.php' ) ) {
+	include_once( dirname( __FILE__ ) . '/wp-includes/http.php' );
+} else {
+	// Compatibility with WP 4.3 and below
+	include_once( dirname( __FILE__ ) . '/wp-includes/class-wp-http-response.php' );
+}
 
 /** Main API functions */
 include_once( dirname( __FILE__ ) . '/wp-includes/functions.php' );

@@ -162,12 +162,19 @@ class WP_REST_Server {
 			$status = 500;
 		}
 
-		$data = array();
+		$errors = array();
 
 		foreach ( (array) $error->errors as $code => $messages ) {
 			foreach ( (array) $messages as $message ) {
-				$data[] = array( 'code' => $code, 'message' => $message, 'data' => $error->get_error_data( $code ) );
+				$errors[] = array( 'code' => $code, 'message' => $message, 'data' => $error->get_error_data( $code ) );
 			}
+		}
+
+		$data = $errors[0];
+		if ( count( $errors ) > 1 ) {
+			// Remove the primary error.
+			array_shift( $errors );
+			$data['additional_errors'] = $errors;
 		}
 
 		$response = new WP_REST_Response( $data, $status );
@@ -198,7 +205,7 @@ class WP_REST_Server {
 
 		$error = compact( 'code', 'message' );
 
-		return wp_json_encode( array( $error ) );
+		return wp_json_encode( $error );
 	}
 
 	/**
@@ -763,6 +770,12 @@ class WP_REST_Server {
 		$path   = $request->get_route();
 
 		foreach ( $this->get_routes() as $route => $handlers ) {
+			$match = preg_match( '@^' . $route . '$@i', $path, $args );
+
+			if ( ! $match ) {
+				continue;
+			}
+
 			foreach ( $handlers as $handler ) {
 				$callback  = $handler['callback'];
 				$response = null;
@@ -771,17 +784,13 @@ class WP_REST_Server {
 					continue;
 				}
 
-				$match = preg_match( '@^' . $route . '$@i', $path, $args );
-
-				if ( ! $match ) {
-					continue;
-				}
-
 				if ( ! is_callable( $callback ) ) {
 					$response = new WP_Error( 'rest_invalid_handler', __( 'The handler for the route is invalid' ), array( 'status' => 500 ) );
 				}
 
 				if ( ! is_wp_error( $response ) ) {
+					// Remove the redundant preg_match argument.
+					unset( $args[0] );
 
 					$request->set_url_params( $args );
 					$request->set_attributes( $handler );
@@ -1063,6 +1072,12 @@ class WP_REST_Server {
 					);
 					if ( isset( $opts['default'] ) ) {
 						$arg_data['default'] = $opts['default'];
+					}
+					if ( isset( $opts['enum'] ) ) {
+						$arg_data['enum'] = $opts['enum'];
+					}
+					if ( isset( $opts['description'] ) ) {
+						$arg_data['description'] = $opts['description'];
 					}
 					$endpoint_data['args'][ $key ] = $arg_data;
 				}

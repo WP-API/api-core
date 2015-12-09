@@ -24,7 +24,6 @@ $core_files = array(
 	'rest-api/class-wp-rest-request.php',
 	'rest-api/class-wp-rest-response.php',
 	'rest-api/class-wp-rest-server.php',
-	'rest-api/rest-functions.php',
 	);
 foreach( $core_files as $core_file ) {
 	copy( $wp_develop_dir . '/src/wp-includes/' . $core_file, $dest_dir . '/wp-includes/' . $core_file );

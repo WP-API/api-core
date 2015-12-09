@@ -26,6 +26,7 @@ if ( file_exists( ABSPATH . WPINC . '/class-wp-http-response.php' ) ) {
 
 /** Main API functions */
 include_once( dirname( __FILE__ ) . '/wp-includes/functions.php' );
+include_once( dirname( __FILE__ ) . '/wp-includes/rest-api.php' );
 
 /** WP_REST_Server class */
 include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/class-wp-rest-server.php' );

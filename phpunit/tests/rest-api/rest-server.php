@@ -121,6 +121,16 @@ class Tests_REST_Server extends WP_Test_REST_TestCase {
 		$this->assertEquals( array( 'foo' => 'bar' ), $request->get_params() );
 	}
 
+	public function test_head_request_handled_by_get() {
+		register_rest_route( 'head-request', '/test', array(
+			'methods'  => array( 'GET' ),
+			'callback' => '__return_true',
+		) );
+		$request = new WP_REST_Request( 'HEAD', '/head-request/test' );
+		$response = $this->server->dispatch( $request );
+		$this->assertEquals( 200, $response->get_status() );
+	}
+
 	/**
 	 * Pass a capability which the user does not have, this should
 	 * result in a 403 error.
@@ -608,5 +618,31 @@ class Tests_REST_Server extends WP_Test_REST_TestCase {
 		$namespaces = $server->get_namespaces();
 		$this->assertContains( 'test/example', $namespaces );
 		$this->assertContains( 'test/another', $namespaces );
+	}
+
+	public function test_nocache_headers_on_authenticated_requests() {
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		$request = new WP_REST_Request( 'GET', '/', array() );
+		wp_set_current_user( $editor );
+
+		$result = $this->server->serve_request('/');
+		$headers = $this->server->sent_headers;
+
+		foreach ( wp_get_nocache_headers() as $header => $value ) {
+			$this->assertTrue( isset( $headers[ $header ] ), sprintf( 'Header %s is not present in the response.', $header ) );
+			$this->assertEquals( $value, $headers[ $header ] );
+		}
+	}
+
+	public function test_no_nocache_headers_on_unauthenticated_requests() {
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		$request = new WP_REST_Request( 'GET', '/', array() );
+
+		$result = $this->server->serve_request('/');
+		$headers = $this->server->sent_headers;
+
+		foreach ( wp_get_nocache_headers() as $header => $value ) {
+			$this->assertFalse( isset( $headers[ $header ] ) && $headers[ $header ] === $value, sprintf( 'Header %s is set to nocache.', $header ) );
+		}
 	}
 }

@@ -39,9 +39,6 @@ include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/class-wp-rest-respons
 /** WP_REST_Request class */
 require_once( dirname( __FILE__ ) . '/wp-includes/rest-api/class-wp-rest-request.php' );
 
-/** REST functions */
-include_once( dirname( __FILE__ ) . '/wp-includes/rest-api/rest-functions.php' );
-
 /** REST filters */
 include_once( dirname( __FILE__ ) . '/wp-includes/filters.php' );
 
